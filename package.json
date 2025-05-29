@@ -26,9 +26,9 @@
     "keybindings": [
       {
         "command": "python-smart-paste.pastePython",
-        "key": "ctrl+shift+v",
-        "mac": "cmd+shift+v",
-        "when": "editorTextFocus && editorLangId == python"
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "editorTextFocus && (editorLangId == python || notebookCellFocused && notebookCellEditable && notebookCellType == 'code')"
       }
     ]
   },
