@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { log } from './logging';
 
 /**
  * Analyzes Python code to determine the indentation level for each line.
@@ -87,6 +88,73 @@ export function analyzePythonIndentation(pythonCode: string): {
             indentSize
         };
 }
+
+
+/**
+ * Strips leading indentation from selected Python code and applies a new base indentation.
+ * 
+ * @param code - The Python code to process
+ * @param targetIndentLevel - The target base indentation level to apply
+ * @param indentSize - The number of spaces per indentation level
+ * @param indentChar - The character used for indentation ('space' or 'tab')
+ * @returns The code with adjusted indentation
+ */
+function normalizeAndApplyIndentation(
+    code: string, 
+    targetIndentLevel: number, 
+    indentSize: number,
+    indentChar: 'space' | 'tab'
+): string {
+    // Split the code into lines
+    const lines = code.split('\n');
+    
+    // Filter out empty lines for indentation analysis
+    const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+    
+    // Extract leading whitespace for each non-empty line
+    const leadingWhitespaces = nonEmptyLines.map(line => {
+        const match = line.match(/^(\s*)/);
+        return match ? match[1] : '';
+    });
+    
+    // Calculate indentation levels for each line
+    const levels = leadingWhitespaces.map(ws => Math.floor(ws.length / indentSize));
+    
+    // Calculate the minimum indentation level
+    const minLevel = levels.length > 0 ? Math.min(...levels) : 0;
+    
+    // Calculate how many characters to remove from each line
+    const charsToRemove = minLevel * indentSize;
+    
+    // Process each line: remove min indentation, then add target indentation
+    const processedLines = lines.map(line => {
+        if (line.trim() === '') {
+            return ''; // Keep empty lines empty
+        }
+        
+        // Get the leading whitespace
+        // Get the leading whitespace
+        const match = line.match(/^(\s*)/);
+        const leadingWhitespace = match ? match[0] : '';
+        
+        // Remove the minimum indentation
+        const actualCharsToRemove = Math.min(charsToRemove, leadingWhitespace.length);
+        const normalizedLine = line.substring(actualCharsToRemove);
+        
+        // Add the target indentation using the appropriate character
+        const indentString = indentChar === 'tab' 
+            ? '\t'.repeat(targetIndentLevel) 
+            : ' '.repeat(targetIndentLevel * indentSize);
+            
+        return indentString + normalizedLine;
+    });
+    
+    // Join the lines back together
+    return processedLines.join('\n');
+}
+
+
+
     
 /**
  * Test function to demonstrate the analyzer with the provided example
@@ -128,7 +196,9 @@ export async function handlePythonPaste() {
     
         // Analyze the indentation of the clipboard content
         const clipboardIndentation = analyzePythonIndentation(clipboardContent);
-        
+        log('Current clipboard code indentation depths:', clipboardIndentation);
+
+
         // Get the current line and its indentation
         const position = editor.selection.active;
         const currentLine = editor.document.lineAt(position.line);
@@ -164,38 +234,72 @@ export async function handlePythonPaste() {
                 targetIndentLevel++;
             }
         }
-        
+        log('targetIndentLevel:', targetIndentLevel);
+
+
+
         // Reformat the clipboard content with the target indentation
-        const lines = clipboardContent.split('\n');
-        const formattedLines = lines.map((line, index) => {
-            if (line.trim() === '') {
-                return '';
-            }
+        // Process the clipboard content: normalize and apply target indentation
+        const formattedContent = normalizeAndApplyIndentation(
+            clipboardContent, 
+            targetIndentLevel, 
+            clipboardIndentation.indentSize,
+            clipboardIndentation.indentChar
+        );
+        log('formattedContent:', formattedContent);
+
+        // // Calculate the minimum indentation level
+        // const minLevel = clipboardIndentation.levels.length > 0 ? Math.min(...clipboardIndentation.levels) : 0;
+
+        // // Subtract the (minLevel * indentSize) of `indentChar` chracters from the start of each the lines
+
+        // // Normalize levels by subtracting the minimum level
+        // const normalizedLevels = clipboardIndentation.levels.map(level => level - minLevel);
+
+        // // Calculate how many characters to remove from each line
+        // const charsToRemove = minLevel * clipboardIndentation.indentSize;
+
+        // // Remove the minimum indentation from each line
+        // const normalizedLines = nonEmptyLines.map(line => {
+        //     const leadingWhitespace = line.match(/^(\s*)/)[0];
+        //     // Only remove up to the amount of leading whitespace that exists
+        //     const actualCharsToRemove = Math.min(charsToRemove, leadingWhitespace.length);
+        //     return line.substring(actualCharsToRemove);
+        // });
+
+
+        // Reformat the clipboard content with the target indentation
+        // const lines = clipboardContent.split('\n');
+        // const formattedLines = lines.map((line, index) => {
+        //     if (line.trim() === '') {
+        //         return '';
+        //     }
             
-            // Calculate the original indentation level of this line
-            const originalLevel = Math.max(0, clipboardIndentation.levels[index] || 0);
+        //     // Calculate the original indentation level of this line
+        //     const originalLevel = Math.max(0, clipboardIndentation.levels[index] || 0);
             
-            // Get the first line's indentation level
-            const firstLevel = Math.max(0, clipboardIndentation.levels[0] || 0);
+        //     // Get the first line's indentation level
+        //     const firstLevel = Math.max(0, clipboardIndentation.levels[0] || 0);
             
-            // Calculate the new indentation level
-            let newLevel = targetIndentLevel + originalLevel - firstLevel;
+        //     // Calculate the new indentation level
+        //     let newLevel = targetIndentLevel + originalLevel - firstLevel;
             
-            // Ensure newLevel is not negative
-            newLevel = Math.max(0, newLevel);
+        //     // Ensure newLevel is not negative
+        //     newLevel = Math.max(0, newLevel);
             
-            // Ensure indentSize is at least 1
-            const indentSize = Math.max(1, clipboardIndentation.indentSize);
+        //     // Ensure indentSize is at least 1
+        //     const indentSize = Math.max(1, clipboardIndentation.indentSize);
             
-            // Create the new indentation string
-            const newIndent = ' '.repeat(newLevel * indentSize);
+        //     // Create the new indentation string
+        //     const newIndent = ' '.repeat(newLevel * indentSize);
             
-            // Replace the original indentation with the new one
-            return newIndent + line.trimLeft();
-        });        
-        // Join the lines back together
-        const formattedContent = formattedLines.join('\n');
-        
+        //     // Replace the original indentation with the new one
+        //     return newIndent + line.trimLeft();
+        // });        
+        // // Join the lines back together
+        // const formattedContent = formattedLines.join('\n');
+        log('formattedContent:', formattedContent, '\n\n');
+
         // Insert the formatted content
         editor.edit(editBuilder => {
             if (editor.selection.isEmpty) {
@@ -208,82 +312,46 @@ export async function handlePythonPaste() {
     
 
 
-// /**
-//  * Strips leading indentation from selected Python code so that the minimum indentation level becomes 0.
-//  */
-// async function stripLeadingIndentation() {
-//         const editor = vscode.window.activeTextEditor;
-//         if (!editor || editor.document.languageId !== 'python') {
-//             vscode.window.showInformationMessage('This command only works with Python files.');
-//             return;
-//         }
+/**
+ * Strips leading indentation from selected Python code so that the minimum indentation level becomes 0.
+ */
+async function stripLeadingIndentation() {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'python') {
+            vscode.window.showInformationMessage('This command only works with Python files.');
+            return;
+        }
     
-//         // Check if there's a selection
-//         if (editor.selection.isEmpty) {
-//             vscode.window.showInformationMessage('Please select some Python code first.');
-//             return;
-//         }
+        // Check if there's a selection
+        if (editor.selection.isEmpty) {
+            vscode.window.showInformationMessage('Please select some Python code first.');
+            return;
+        }
     
-//         // Get the selected text
-//         const selection = editor.selection;
-//         const selectedText = editor.document.getText(selection);
+        // Get the selected text
+        const selection = editor.selection;
+        const selectedText = editor.document.getText(selection);
         
-//         // Analyze the indentation of the selected text
-//         const indentationInfo = analyzePythonIndentation(selectedText);
+        // Analyze the indentation of the selected text
+        const indentationInfo = analyzePythonIndentation(selectedText);
         
-//         // Find the minimum indentation level among non-empty lines
-//         let minIndentLevel = Number.MAX_SAFE_INTEGER;
+        // Process the selected text: normalize and apply zero indentation
+        const formattedText = normalizeAndApplyIndentation(
+            selectedText, 
+            0, 
+            indentationInfo.indentSize,
+            indentationInfo.indentChar
+        );
         
-//         // Get all non-empty lines and their indentation levels
-//         const lines = selectedText.split('\n');
-//         const nonEmptyLines = lines.filter(line => line.trim().length > 0);
-        
-//         // If there are no non-empty lines, nothing to do
-//         if (nonEmptyLines.length === 0) {
-//             return;
-//         }
-        
-//         // Find the minimum indentation level
-//         for (let i = 0; i < indentationInfo.levels.length; i++) {
-//             const level = indentationInfo.levels[i];
-//             minIndentLevel = Math.min(minIndentLevel, level);
-//         }
-        
-//         // If minimum indentation is already 0, nothing to do
-//         if (minIndentLevel === 0) {
-//             vscode.window.showInformationMessage('Selected code already has minimum indentation.');
-//             return;
-//         }
-        
-//         // Reduce indentation for all lines
-//         const formattedLines = lines.map((line) => {
-//             if (line.trim() === '') {
-//                 return ''; // Empty lines remain empty
-//             }
-            
-//             // Count leading whitespace
-//             const leadingWhitespace = line.match(/^(\s*)/)[0];
-//             const currentIndentSize = leadingWhitespace.length;
-            
-//             // Calculate how many characters to remove
-//             const charsToRemove = minIndentLevel * indentationInfo.indentSize;
-            
-//             // Remove the characters
-//             return line.substring(Math.min(charsToRemove, currentIndentSize));
-//         });
-        
-//         // Join the lines back together
-//         const formattedText = formattedLines.join('\n');
-        
-//         // Replace the selected text with the formatted text
-//         editor.edit(editBuilder => {
-//             editBuilder.replace(selection, formattedText);
-//         }).then(success => {
-//             if (success) {
-//                 vscode.window.showInformationMessage(`Removed ${minIndentLevel} level(s) of indentation.`);
-//             }
-//         });
-// }
+        // Replace the selected text with the formatted text
+        editor.edit(editBuilder => {
+            editBuilder.replace(selection, formattedText);
+        }).then(success => {
+            if (success) {
+                const minLevel = indentationInfo.levels.length > 0 ? Math.min(...indentationInfo.levels) : 0;
+                vscode.window.showInformationMessage(`Removed ${minLevel} level(s) of indentation.`);
+            }
+        });
+}
 
-    
     
