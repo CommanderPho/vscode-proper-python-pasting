@@ -4,6 +4,7 @@
   "description": "Fixes the longstanding issues with pasting python code into a different editor by determining the proper indentation depth of the paste destination and pasting so that it matches.",
   "version": "0.0.1",
   "publisher": "phohale",
+  "repository": "https://github.com/CommanderPho/vscode-proper-python-pasting",
   "engines": {
     "vscode": "^1.98.0"
   },
@@ -11,7 +12,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:extension.sayHello"
+    "onCommand:extension.pastePython"
   ],
   "main": "./out/extension",
   "contributes": {

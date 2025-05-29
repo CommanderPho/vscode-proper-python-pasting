@@ -200,82 +200,82 @@ export async function handlePythonPaste() {
     
 
 
-/**
- * Strips leading indentation from selected Python code so that the minimum indentation level becomes 0.
- */
-async function stripLeadingIndentation() {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor || editor.document.languageId !== 'python') {
-            vscode.window.showInformationMessage('This command only works with Python files.');
-            return;
-        }
+// /**
+//  * Strips leading indentation from selected Python code so that the minimum indentation level becomes 0.
+//  */
+// async function stripLeadingIndentation() {
+//         const editor = vscode.window.activeTextEditor;
+//         if (!editor || editor.document.languageId !== 'python') {
+//             vscode.window.showInformationMessage('This command only works with Python files.');
+//             return;
+//         }
     
-        // Check if there's a selection
-        if (editor.selection.isEmpty) {
-            vscode.window.showInformationMessage('Please select some Python code first.');
-            return;
-        }
+//         // Check if there's a selection
+//         if (editor.selection.isEmpty) {
+//             vscode.window.showInformationMessage('Please select some Python code first.');
+//             return;
+//         }
     
-        // Get the selected text
-        const selection = editor.selection;
-        const selectedText = editor.document.getText(selection);
+//         // Get the selected text
+//         const selection = editor.selection;
+//         const selectedText = editor.document.getText(selection);
         
-        // Analyze the indentation of the selected text
-        const indentationInfo = analyzePythonIndentation(selectedText);
+//         // Analyze the indentation of the selected text
+//         const indentationInfo = analyzePythonIndentation(selectedText);
         
-        // Find the minimum indentation level among non-empty lines
-        let minIndentLevel = Number.MAX_SAFE_INTEGER;
+//         // Find the minimum indentation level among non-empty lines
+//         let minIndentLevel = Number.MAX_SAFE_INTEGER;
         
-        // Get all non-empty lines and their indentation levels
-        const lines = selectedText.split('\n');
-        const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+//         // Get all non-empty lines and their indentation levels
+//         const lines = selectedText.split('\n');
+//         const nonEmptyLines = lines.filter(line => line.trim().length > 0);
         
-        // If there are no non-empty lines, nothing to do
-        if (nonEmptyLines.length === 0) {
-            return;
-        }
+//         // If there are no non-empty lines, nothing to do
+//         if (nonEmptyLines.length === 0) {
+//             return;
+//         }
         
-        // Find the minimum indentation level
-        for (let i = 0; i < indentationInfo.levels.length; i++) {
-            const level = indentationInfo.levels[i];
-            minIndentLevel = Math.min(minIndentLevel, level);
-        }
+//         // Find the minimum indentation level
+//         for (let i = 0; i < indentationInfo.levels.length; i++) {
+//             const level = indentationInfo.levels[i];
+//             minIndentLevel = Math.min(minIndentLevel, level);
+//         }
         
-        // If minimum indentation is already 0, nothing to do
-        if (minIndentLevel === 0) {
-            vscode.window.showInformationMessage('Selected code already has minimum indentation.');
-            return;
-        }
+//         // If minimum indentation is already 0, nothing to do
+//         if (minIndentLevel === 0) {
+//             vscode.window.showInformationMessage('Selected code already has minimum indentation.');
+//             return;
+//         }
         
-        // Reduce indentation for all lines
-        const formattedLines = lines.map((line) => {
-            if (line.trim() === '') {
-                return ''; // Empty lines remain empty
-            }
+//         // Reduce indentation for all lines
+//         const formattedLines = lines.map((line) => {
+//             if (line.trim() === '') {
+//                 return ''; // Empty lines remain empty
+//             }
             
-            // Count leading whitespace
-            const leadingWhitespace = line.match(/^(\s*)/)[0];
-            const currentIndentSize = leadingWhitespace.length;
+//             // Count leading whitespace
+//             const leadingWhitespace = line.match(/^(\s*)/)[0];
+//             const currentIndentSize = leadingWhitespace.length;
             
-            // Calculate how many characters to remove
-            const charsToRemove = minIndentLevel * indentationInfo.indentSize;
+//             // Calculate how many characters to remove
+//             const charsToRemove = minIndentLevel * indentationInfo.indentSize;
             
-            // Remove the characters
-            return line.substring(Math.min(charsToRemove, currentIndentSize));
-        });
+//             // Remove the characters
+//             return line.substring(Math.min(charsToRemove, currentIndentSize));
+//         });
         
-        // Join the lines back together
-        const formattedText = formattedLines.join('\n');
+//         // Join the lines back together
+//         const formattedText = formattedLines.join('\n');
         
-        // Replace the selected text with the formatted text
-        editor.edit(editBuilder => {
-            editBuilder.replace(selection, formattedText);
-        }).then(success => {
-            if (success) {
-                vscode.window.showInformationMessage(`Removed ${minIndentLevel} level(s) of indentation.`);
-            }
-        });
-}
+//         // Replace the selected text with the formatted text
+//         editor.edit(editBuilder => {
+//             editBuilder.replace(selection, formattedText);
+//         }).then(success => {
+//             if (success) {
+//                 vscode.window.showInformationMessage(`Removed ${minIndentLevel} level(s) of indentation.`);
+//             }
+//         });
+// }
 
     
     
