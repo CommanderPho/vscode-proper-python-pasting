@@ -105,16 +105,24 @@ function testAnalyzer() {
     
     
 export async function handlePythonPaste() {
+        // Check if we're in a notebook cell
+        const activeNotebookEditor = vscode.window.activeNotebookEditor;
+        const isJupyterCodeCell = activeNotebookEditor && activeNotebookEditor.notebook.cellAt(activeNotebookEditor.selection.start)?.kind === vscode.NotebookCellKind.Code;
+
+        // Regular editor check
         const editor = vscode.window.activeTextEditor;
-        if (!editor || editor.document.languageId !== 'python') {
-            // If not in a Python file, perform regular paste
-            await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
-            return;
+        const isPythonFile = editor?.document.languageId === 'python';
+
+        if (!editor || (!isPythonFile && !isJupyterCodeCell)) {
+                // Fall back to default paste
+                await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+                return;
         }
-    
+        
         // Get clipboard content
         const clipboardContent = await vscode.env.clipboard.readText();
         if (!clipboardContent) {
+            // Nothing to paste
             return;
         }
     
