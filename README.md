@@ -15,3 +15,6 @@ Users appreciate release notes as you update your extension.
 
 Initial release with basic functionality.
 
+### 0.0.2
+
+Override default paste command (ctrl+v/cmd+v) with smart paste for python files
