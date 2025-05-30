@@ -154,6 +154,65 @@ function normalizeAndApplyIndentation(
 }
 
 
+/**
+ * Determines the appropriate indentation level for pasting Python code.
+ * 
+ * @param editor - The active text editor
+ * @param position - The current cursor position
+ * @param clipboardIndentation - Information about the indentation of the clipboard content
+ * @returns The target indentation level to apply
+ */
+function determineTargetIndentLevel(
+    editor: vscode.TextEditor,
+    clipboardIndentation: { indentSize: number }
+): number {
+    // Get the current line and its indentation
+    // Get the current line and its indentation
+    const position = editor.selection.active;
+    const currentLine = editor.document.lineAt(position.line);
+    const currentIndentMatch = currentLine.text.match(/^(\s*)/);
+    const currentIndent = currentIndentMatch ? currentIndentMatch[1] : '';
+    
+    // Determine target indentation level
+    let targetIndentLevel = 0;
+    
+    // Check if we're in the middle of an expression (not at the beginning of the line after whitespace)
+    const isAtLineStart = position.character <= currentIndent.length;
+    
+    if (!isAtLineStart || !editor.selection.isEmpty) {
+        // If we're in the middle of an expression and have a selection, use zero indentation
+        targetIndentLevel = 0;
+    }
+    // If the cursor is at an empty line, use the indentation of the previous non-empty line
+    else if (currentLine.isEmptyOrWhitespace) {
+        for (let i = position.line - 1; i >= 0; i--) {
+            const prevLine = editor.document.lineAt(i);
+            if (!prevLine.isEmptyOrWhitespace) {
+                const prevIndentMatch = prevLine.text.match(/^(\s*)/);
+                const prevIndent = prevIndentMatch ? prevIndentMatch[1] : '';
+                
+                // Check if the previous line ends with a colon (indicating a new block)
+                if (prevLine.text.trim().endsWith(':')) {
+                    targetIndentLevel = prevIndent.length / clipboardIndentation.indentSize + 1;
+                } else {
+                    targetIndentLevel = prevIndent.length / clipboardIndentation.indentSize;
+                }
+                break;
+            }
+        }
+    } else {
+        // Use the current line's indentation
+        targetIndentLevel = currentIndent.length / clipboardIndentation.indentSize;
+        
+        // If we're at the end of a line that ends with a colon, increase indentation
+        if (currentLine.text.trim().endsWith(':') && position.character >= currentLine.range.end.character) {
+            targetIndentLevel++;
+        }
+    }
+    
+    return targetIndentLevel;
+}
+
     
 export async function handlePythonPaste() {
         // Check if we're in a notebook cell
@@ -177,48 +236,16 @@ export async function handlePythonPaste() {
             return;
         }
     
+        log('clipboardContent: """', clipboardContent, '"""\n');
+
         // Analyze the indentation of the clipboard content
         const clipboardIndentation = analyzePythonIndentation(clipboardContent);
-        log('Current clipboard code indentation depths:', clipboardIndentation);
+        log('\tcurrent clipboard code indentation depths:', clipboardIndentation);
 
-
-        // Get the current line and its indentation
-        const position = editor.selection.active;
-        const currentLine = editor.document.lineAt(position.line);
-        const currentIndentMatch = currentLine.text.match(/^(\s*)/);
-        const currentIndent = currentIndentMatch ? currentIndentMatch[1] : '';
         
         // Determine target indentation level
-        let targetIndentLevel = 0;
-        
-        // If the cursor is at an empty line, use the indentation of the previous non-empty line
-        if (currentLine.isEmptyOrWhitespace) {
-            for (let i = position.line - 1; i >= 0; i--) {
-                const prevLine = editor.document.lineAt(i);
-                if (!prevLine.isEmptyOrWhitespace) {
-                    const prevIndentMatch = prevLine.text.match(/^(\s*)/);
-                    const prevIndent = prevIndentMatch ? prevIndentMatch[1] : '';
-                    
-                    // Check if the previous line ends with a colon (indicating a new block)
-                    if (prevLine.text.trim().endsWith(':')) {
-                        targetIndentLevel = prevIndent.length / clipboardIndentation.indentSize + 1;
-                    } else {
-                        targetIndentLevel = prevIndent.length / clipboardIndentation.indentSize;
-                    }
-                    break;
-                }
-            }
-        } else {
-            // Use the current line's indentation
-            targetIndentLevel = currentIndent.length / clipboardIndentation.indentSize;
-            
-            // If we're at the end of a line that ends with a colon, increase indentation
-            if (currentLine.text.trim().endsWith(':') && position.character >= currentLine.range.end.character) {
-                targetIndentLevel++;
-            }
-        }
-        log('targetIndentLevel:', targetIndentLevel);
-
+        const targetIndentLevel = determineTargetIndentLevel(editor, clipboardIndentation);
+        log('\ttargetIndentLevel: ', targetIndentLevel);
 
 
         // Reformat the clipboard content with the target indentation
@@ -229,11 +256,12 @@ export async function handlePythonPaste() {
             clipboardIndentation.indentSize,
             clipboardIndentation.indentChar
         );
-        log('formattedContent:', formattedContent, '\n\n');
+        log('formattedContent: """', formattedContent, '"""\n\n');
 
         // Insert the formatted content
         editor.edit(editBuilder => {
             if (editor.selection.isEmpty) {
+                const position = editor.selection.active;
                 editBuilder.insert(position, formattedContent);
             } else {
                 editBuilder.replace(editor.selection, formattedContent);
@@ -293,7 +321,7 @@ export function testPythonFormatter(sourceCode: string, targetIndentLevel: numbe
 
     // Analyze the indentation of the clipboard content
     const clipboardIndentation = analyzePythonIndentation(sourceCode);
-    log('Current clipboard code indentation depths:', clipboardIndentation);
+    log('Current clipboard code indentation depths: """', clipboardIndentation, '"""');
     
     // Reformat the clipboard content with the target indentation
     // Process the clipboard content: normalize and apply target indentation
@@ -303,7 +331,7 @@ export function testPythonFormatter(sourceCode: string, targetIndentLevel: numbe
         clipboardIndentation.indentSize,
         clipboardIndentation.indentChar
     );
-    log('formattedContent:', formattedContent, '\n\n');
+    log('formattedContent: """', formattedContent, '"""\n\n');
     return formattedContent;
 }
 
