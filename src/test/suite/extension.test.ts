@@ -34,6 +34,39 @@ suite('ProperPythonPasting Extension Tests', () => {
 # laps_trained_decoder_search_context = IdentifyingContext(trained_compute_epochs='laps', pfND_ndim=1, decoder_identifier='pseudo2D', known_named_decoding_epochs_type='laps', masked_time_bin_fill_type='dropped', data_grain='per_time_bin')
 flat_context_list, flat_result_context_dict, flat_decoder_context_dict, flat_decoded_marginal_posterior_df_context_dict = a_new_fully_generic_result.get_results_matching_contexts(context_query=pbe_trained_decoder_search_context, return_multiple_matches=True, debug_print=True)`,
         );
+
+
+        test('Indented code with function call args with uneven indenting', async () => {
+            testPythonFormatting(
+            // Source code as copied input
+                `        ## Sanity check:
+        if debug_print:
+            curr_epoch_result: SingleEpochDecodedResult = active_filter_epochs_decoder_result.get_result_for_epoch_at_time(epoch_start_time=clicked_epoch[0])
+            print(f"curr_epoch_result.epoch_info_tuple: {curr_epoch_result.epoch_info_tuple}")
+            print(f"\tnbins: {curr_epoch_result.nbins}")
+            print(f'\tactive_filter_epochs_decoder_result.decoding_time_bin_size: {active_filter_epochs_decoder_result.decoding_time_bin_size}')
+            # curr_epoch_result.time_bin_container
+
+        # active_filter_epochs_decoder_result.all_directional_ripple_filter_epochs_decoder_result
+        out_image_save_tuple_dict = cls.save_marginals_arrays_as_image(directional_merged_decoders_result=directional_merged_decoders_result, parent_array_as_image_output_folder=context_specific_root_export_path,
+                                                          epoch_id_identifier_str=epoch_id_identifier_str, epoch_ids=epoch_ids, debug_print=True, export_kind=export_kind, include_value_labels=False, allow_override_aspect_ratio=allow_override_aspect_ratio,# **kwargs,
+                                                        )`,
+            // Expected result
+            `## Sanity check:
+if debug_print:
+    curr_epoch_result: SingleEpochDecodedResult = active_filter_epochs_decoder_result.get_result_for_epoch_at_time(epoch_start_time=clicked_epoch[0])
+    print(f"curr_epoch_result.epoch_info_tuple: {curr_epoch_result.epoch_info_tuple}")
+    print(f"\tnbins: {curr_epoch_result.nbins}")
+    print(f'\tactive_filter_epochs_decoder_result.decoding_time_bin_size: {active_filter_epochs_decoder_result.decoding_time_bin_size}')
+    # curr_epoch_result.time_bin_container
+
+# active_filter_epochs_decoder_result.all_directional_ripple_filter_epochs_decoder_result
+out_image_save_tuple_dict = cls.save_marginals_arrays_as_image(directional_merged_decoders_result=directional_merged_decoders_result, parent_array_as_image_output_folder=context_specific_root_export_path,
+                                                  epoch_id_identifier_str=epoch_id_identifier_str, epoch_ids=epoch_ids, debug_print=True, export_kind=export_kind, include_value_labels=False, allow_override_aspect_ratio=allow_override_aspect_ratio,# **kwargs,
+                                                )`,
+            );
+
+
     });
 
 
