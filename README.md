@@ -18,3 +18,7 @@ Initial release with basic functionality.
 ### 0.0.2
 
 Override default paste command (ctrl+v/cmd+v) with smart paste for python files
+
+### 0.0.3
+
+Fixed forced logging console display.

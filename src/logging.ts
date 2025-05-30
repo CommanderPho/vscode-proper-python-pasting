@@ -47,11 +47,11 @@ export async function showTimedErrorMessage(message: string, timeout: number = 5
 // // Usage example: Show the message for 3 seconds (3000 ms)
 // showTimedInformationMessage(`Executing ${cellRefs.length} cells with tag: ${tag}`, 3000);
 
-export function activateCustomLogging(context: vscode.ExtensionContext) {
+export function activateCustomLogging(context: vscode.ExtensionContext, show: boolean = false) {
     // must be called first before any logging
     myChannel = vscode.window.createOutputChannel('PhoLogger');
     myChannel.appendLine('Extension activated.');
-    myChannel.show(true);
+    myChannel.show(show);
     log('Extension activated.');
 
 }
