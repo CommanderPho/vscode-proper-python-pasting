@@ -154,23 +154,6 @@ function normalizeAndApplyIndentation(
 }
 
 
-
-    
-/**
- * Test function to demonstrate the analyzer with the provided example
- */
-function testAnalyzer() {
-        const pythonCode = `            pbe_trained_decoder_search_context = IdentifyingContext(trained_compute_epochs='laps', pfND_ndim=1, decoder_identifier='pseudo2D', known_named_decoding_epochs_type='pbe', masked_time_bin_fill_type=('ignore', 'nan_filled', 'dropped'), data_grain='per_time_bin') # , data_grain= 'per_time_bin -- not really relevant: ['masked_time_bin_fill_type', 'known_named_decoding_epochs_type', 'data_grain']
-                # laps_trained_decoder_search_context = IdentifyingContext(trained_compute_epochs='laps', pfND_ndim=1, decoder_identifier='pseudo2D', known_named_decoding_epochs_type='laps', masked_time_bin_fill_type='dropped', data_grain='per_time_bin')
-                flat_context_list, flat_result_context_dict, flat_decoder_context_dict, flat_decoded_marginal_posterior_df_context_dict = a_new_fully_generic_result.get_results_matching_contexts(context_query=pbe_trained_decoder_search_context, return_multiple_matches=True, debug_print=True)`;
-
-        const result = analyzePythonIndentation(pythonCode);
-        console.log('Indentation levels:', result.levels);
-        console.log('Indentation character:', result.indentChar);
-        console.log('Indentation size:', result.indentSize);
-}
-
-    
     
 export async function handlePythonPaste() {
         // Check if we're in a notebook cell
@@ -246,58 +229,6 @@ export async function handlePythonPaste() {
             clipboardIndentation.indentSize,
             clipboardIndentation.indentChar
         );
-        log('formattedContent:', formattedContent);
-
-        // // Calculate the minimum indentation level
-        // const minLevel = clipboardIndentation.levels.length > 0 ? Math.min(...clipboardIndentation.levels) : 0;
-
-        // // Subtract the (minLevel * indentSize) of `indentChar` chracters from the start of each the lines
-
-        // // Normalize levels by subtracting the minimum level
-        // const normalizedLevels = clipboardIndentation.levels.map(level => level - minLevel);
-
-        // // Calculate how many characters to remove from each line
-        // const charsToRemove = minLevel * clipboardIndentation.indentSize;
-
-        // // Remove the minimum indentation from each line
-        // const normalizedLines = nonEmptyLines.map(line => {
-        //     const leadingWhitespace = line.match(/^(\s*)/)[0];
-        //     // Only remove up to the amount of leading whitespace that exists
-        //     const actualCharsToRemove = Math.min(charsToRemove, leadingWhitespace.length);
-        //     return line.substring(actualCharsToRemove);
-        // });
-
-
-        // Reformat the clipboard content with the target indentation
-        // const lines = clipboardContent.split('\n');
-        // const formattedLines = lines.map((line, index) => {
-        //     if (line.trim() === '') {
-        //         return '';
-        //     }
-            
-        //     // Calculate the original indentation level of this line
-        //     const originalLevel = Math.max(0, clipboardIndentation.levels[index] || 0);
-            
-        //     // Get the first line's indentation level
-        //     const firstLevel = Math.max(0, clipboardIndentation.levels[0] || 0);
-            
-        //     // Calculate the new indentation level
-        //     let newLevel = targetIndentLevel + originalLevel - firstLevel;
-            
-        //     // Ensure newLevel is not negative
-        //     newLevel = Math.max(0, newLevel);
-            
-        //     // Ensure indentSize is at least 1
-        //     const indentSize = Math.max(1, clipboardIndentation.indentSize);
-            
-        //     // Create the new indentation string
-        //     const newIndent = ' '.repeat(newLevel * indentSize);
-            
-        //     // Replace the original indentation with the new one
-        //     return newIndent + line.trimLeft();
-        // });        
-        // // Join the lines back together
-        // const formattedContent = formattedLines.join('\n');
         log('formattedContent:', formattedContent, '\n\n');
 
         // Insert the formatted content
@@ -352,6 +283,44 @@ async function stripLeadingIndentation() {
                 vscode.window.showInformationMessage(`Removed ${minLevel} level(s) of indentation.`);
             }
         });
+}
+
+    
+/**
+ * Test function to demonstrate the analyzer with the provided example
+ */
+export function testPythonFormatter(sourceCode: string, targetIndentLevel: number = 0) {
+
+    // Analyze the indentation of the clipboard content
+    const clipboardIndentation = analyzePythonIndentation(sourceCode);
+    log('Current clipboard code indentation depths:', clipboardIndentation);
+    
+    // Reformat the clipboard content with the target indentation
+    // Process the clipboard content: normalize and apply target indentation
+    const formattedContent = normalizeAndApplyIndentation(
+        sourceCode, 
+        targetIndentLevel, 
+        clipboardIndentation.indentSize,
+        clipboardIndentation.indentChar
+    );
+    log('formattedContent:', formattedContent, '\n\n');
+    return formattedContent;
+}
+
+
+
+
+    
+
+function testAnalyzer() {
+        const pythonCode = `            pbe_trained_decoder_search_context = IdentifyingContext(trained_compute_epochs='laps', pfND_ndim=1, decoder_identifier='pseudo2D', known_named_decoding_epochs_type='pbe', masked_time_bin_fill_type=('ignore', 'nan_filled', 'dropped'), data_grain='per_time_bin') # , data_grain= 'per_time_bin -- not really relevant: ['masked_time_bin_fill_type', 'known_named_decoding_epochs_type', 'data_grain']
+                # laps_trained_decoder_search_context = IdentifyingContext(trained_compute_epochs='laps', pfND_ndim=1, decoder_identifier='pseudo2D', known_named_decoding_epochs_type='laps', masked_time_bin_fill_type='dropped', data_grain='per_time_bin')
+                flat_context_list, flat_result_context_dict, flat_decoder_context_dict, flat_decoded_marginal_posterior_df_context_dict = a_new_fully_generic_result.get_results_matching_contexts(context_query=pbe_trained_decoder_search_context, return_multiple_matches=True, debug_print=True)`;
+
+        const result = analyzePythonIndentation(pythonCode);
+        console.log('Indentation levels:', result.levels);
+        console.log('Indentation character:', result.indentChar);
+        console.log('Indentation size:', result.indentSize);
 }
 
     
