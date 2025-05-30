@@ -2,7 +2,7 @@
   "name": "properpythonpasting",
   "displayName": "ProperPythonPasting",
   "description": "Fixes the longstanding issues with pasting python code into a different editor by determining the proper indentation depth of the paste destination and pasting so that it matches.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "phohale",
   "repository": "https://github.com/CommanderPho/vscode-proper-python-pasting",
   "engines": {
@@ -36,16 +36,18 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "node ./out/test/runTest.js"
+    "test": "vscode-test"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
-    "@types/mocha": "^2.2.48",
+    "@types/mocha": "^10.0.1",
     "@types/node": "^8.10.25",
     "@types/vscode": "^1.98.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
     "glob": "^11.0.2",
     "mocha": "^11.5.0",
-    "typescript": "^5.8.3",
-    "vscode-test": "^1.6.1"
-  }
+    "typescript": "^5.8.3"
+  },
+  "type": "module"
 }
