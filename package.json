@@ -48,6 +48,5 @@
     "glob": "^11.0.2",
     "mocha": "^11.5.0",
     "typescript": "^5.8.3"
-  },
-  "type": "module"
+  }
 }
